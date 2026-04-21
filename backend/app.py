@@ -1,9 +1,10 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from datetime import datetime
 import random
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
+from birth_chart_service import get_sun_sign, get_moon_sign, get_rising_sign, get_planetary_positions
 
 load_dotenv()
 
@@ -64,6 +65,7 @@ def index():
         "message": "Stellar Whisper API",
         "version": "1.0.0",
         "endpoints": ["/horoscope/<sign>", "/horoscope/today", "/horoscope/weekly/<sign>", "/horoscope/<sign>/<date>", "/horoscope/monthly/<sign>"]
+        "endpoints": ["/horoscope/<sign>", "/horoscope/today", "/horoscope/weekly/<sign>", "/horoscope/<sign>/<date>"]
     })
 
 @app.route('/horoscope/<sign>')
@@ -93,6 +95,69 @@ def get_today_horoscopes():
         "horoscopes": horoscopes
     })
 
+
+@app.route('/api/birth-chart', methods=['POST'])
+def get_birth_chart():
+    """
+    Calculate birth chart based on birth date, time, and location.
+    
+    Expected JSON payload:
+    {
+        "birth_date": "YYYY-MM-DD",
+        "birth_time": "HH:MM:SS",
+        "latitude": float,
+        "longitude": float,
+        "timezone": "UTC offset or timezone string"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['birth_date', 'birth_time', 'latitude', 'longitude']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+        
+        # Parse date and time
+        birth_date = datetime.strptime(data['birth_date'], "%Y-%m-%d")
+        birth_time = datetime.strptime(data['birth_time'], "%H:%M:%S")
+        
+        # Combine date and time for calculation
+        birth_datetime = datetime(
+            birth_date.year, birth_date.month, birth_date.day,
+            birth_time.hour, birth_time.minute, birth_time.second
+        )
+        
+        # Get coordinates
+        latitude = float(data['latitude'])
+        longitude = float(data['longitude'])
+        
+        # Calculate birth chart components
+        sun_sign = get_sun_sign(birth_datetime)
+        moon_sign = get_moon_sign(birth_datetime, birth_datetime, latitude, longitude)
+        rising_sign = get_rising_sign(birth_datetime, birth_datetime, latitude, longitude)
+        planetary_positions = get_planetary_positions(birth_datetime, birth_datetime, latitude, longitude)
+        
+        # Prepare response
+        result = {
+            "birth_date": data['birth_date'],
+            "birth_time": data['birth_time'],
+            "latitude": latitude,
+            "longitude": longitude,
+            "sun_sign": sun_sign,
+            "moon_sign": moon_sign,
+            "rising_sign": rising_sign,
+            "planetary_positions": planetary_positions,
+            "calculated_at": datetime.now().isoformat()
+        }
+        
+        return jsonify(result)
+        
+    except ValueError as e:
+        return jsonify({"error": f"Invalid input format: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Calculation failed: {str(e)}"}), 500
 @app.route('/horoscope/weekly/<sign>')
 def get_weekly_horoscope(sign):
     sign = sign.lower()
