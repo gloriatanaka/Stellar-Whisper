@@ -215,7 +215,7 @@ def get_rising_sign(birth_date: datetime, birth_time: datetime, latitude: float,
     time = _datetime_to_skyfield_time(birth_datetime)
     
     # Create observer location
-    observer = wgs84.latlong(latitude_degrees=latitude, longitude_degrees=longitude)
+    observer = wgs84.latlon(latitude_degrees=latitude, longitude_degrees=longitude)
     
     # Get Earth's position
     earth = eph['earth']
@@ -226,7 +226,9 @@ def get_rising_sign(birth_date: datetime, birth_time: datetime, latitude: float,
     
     # Get the apparent position of the Sun (to get ecliptic orientation)
     sun_app = earth.at(time).observe(eph['sun']).apparent()
-    sun_lon = sun_app.frame_xyz(ecliptic_frame)[1].degrees  # ecliptic longitude
+    # Get ecliptic longitude directly
+    _, sun_lon, _ = sun_app.frame_latlon(ecliptic_frame)
+    sun_lon_degrees = sun_lon.degrees
     
     # Calculate local sidereal time (LST) in degrees
     # LST = GMST + longitude
