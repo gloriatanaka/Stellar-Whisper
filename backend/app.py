@@ -118,9 +118,9 @@ def get_birth_chart():
         
         # Calculate birth chart components
         sun_sign = get_sun_sign(birth_datetime)
-        moon_sign = get_moon_sign(birth_datetime, birth_datetime, latitude, longitude)
-        rising_sign = get_rising_sign(birth_datetime, birth_datetime, latitude, longitude)
-        planetary_positions = get_planetary_positions(birth_datetime, birth_datetime, latitude, longitude)
+        moon_sign = get_moon_sign(birth_date, birth_time, latitude, longitude)
+        rising_sign = get_rising_sign(birth_date, birth_time, latitude, longitude)
+        planetary_positions = get_planetary_positions(birth_date, birth_time, latitude, longitude)
         
         # Prepare response
         result = {

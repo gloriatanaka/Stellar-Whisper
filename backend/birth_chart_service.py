@@ -234,8 +234,8 @@ def get_rising_sign(birth_date: datetime, birth_time: datetime, latitude: float,
     # LST = GMST + longitude
     # where GMST is Greenwich Mean Sidereal Time
     # Using Skyfield's built-in sidereal time calculation
-    gast = ts.greenwich_apparent_sidereal_time(time)  # Greenwich Apparent Sidereal Time in hours
-    lst_hours = gast.hours + longitude / 15.0  # Convert longitude to hours
+    gast = time.gast  # Greenwich Apparent Sidereal Time in hours
+    lst_hours = gast + longitude / 15.0  # Convert longitude to hours
     lst_degrees = (lst_hours * 15) % 360  # Convert to degrees, normalize to 0-360
     
     # Calculate Ascendant (rising sign)
