@@ -141,6 +141,10 @@ def test_weekly_horoscope_endpoint_invalid_sign(client):
     data = json.loads(response.data)
     assert 'error' in data
 
+# New tests for the monthly horoscope endpoint
+def test_horoscope_monthly_endpoint_valid_sign(client):
+    """Test that the monthly horoscope endpoint works with valid sign."""
+    response = client.get('/horoscope/monthly/aries')
 # New tests for the specific date endpoint
 def test_horoscope_specific_date_endpoint_valid(client):
     """Test that the horoscope for a specific date endpoint works with valid input."""
@@ -151,6 +155,13 @@ def test_horoscope_specific_date_endpoint_valid(client):
     assert data['sign'] == 'aries'
     assert 'horoscope' in data
     assert 'date' in data
+
+def test_horoscope_monthly_endpoint_invalid_sign(client):
+    """Test that the monthly horoscope endpoint returns 400 for invalid sign."""
+    response = client.get('/horoscope/monthly/invalid')
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert 'error' in data
     assert data['date'] == '2026-04-21'
 
 def test_horoscope_specific_date_endpoint_invalid_sign(client):
