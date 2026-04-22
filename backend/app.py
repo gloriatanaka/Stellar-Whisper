@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from flask_cors import CORS
 from birth_chart_service import get_sun_sign, get_moon_sign, get_rising_sign, get_planetary_positions
+from tarot_service import shuffle_deck, draw_cards, get_card_meaning
 
 load_dotenv()
 
@@ -48,10 +49,10 @@ def index():
     return jsonify({
         "message": "Stellar Whisper API",
         "version": "1.0.0",
-        "endpoints": ["/horoscope/<sign>", "/horoscope/today", "/horoscope/weekly/<sign>", "/horoscope/<sign>/<date>"]
+        "endpoints": ["/horoscope/<sign>", "/horoscope/today", "/horoscope/weekly/<sign>", "/horoscope/<sign>/<date>", "/tarot/deck", "/tarot/draw/single", "/tarot/draw/three-card"]
     })
 
-@app.route('/horoscope/<sign>')
+@ app.route('/horoscope/<sign>')
 def get_horoscope(sign):
     sign = sign.lower()
     if sign in HOROSCOPES:
@@ -77,7 +78,6 @@ def get_today_horoscopes():
         "date": today,
         "horoscopes": horoscopes
     })
-
 
 @app.route('/api/birth-chart', methods=['POST'])
 def get_birth_chart():
@@ -141,6 +141,68 @@ def get_birth_chart():
         return jsonify({"error": f"Invalid input format: {str(e)}"}), 400
     except Exception as e:
         return jsonify({"error": f"Calculation failed: {str(e)}"}), 500
+
+@app.route('/tarot/deck', methods=['GET'])
+def get_tarot_deck():
+    """
+    Returns a shuffled tarot deck (without reversed status, as that is determined at draw time).
+    """
+    deck = shuffle_deck()
+    # Remove the 'reversed' key if it exists (it shouldn't in the base deck, but just in case)
+    for card in deck:
+        card.pop('reversed', None)
+    return jsonify({
+        "deck": deck,
+        "count": len(deck)
+    })
+
+@app.route('/tarot/draw/single', methods=['POST'])
+def draw_single_card():
+    """
+    Draws a single tarot card.
+    """
+    try:
+        # Get a shuffled deck and draw one card
+        deck = shuffle_deck()
+        drawn_cards = draw_cards(num_cards=1, deck=deck)
+        card = drawn_cards[0]
+        
+        # Get the meaning based on orientation
+        meaning = get_card_meaning(card)
+        
+        return jsonify({
+            "card": card,
+            "meaning": meaning
+        })
+    except Exception as e:
+        return jsonify({"error": f"Failed to draw card: {str(e)}"}), 500
+
+@app.route('/tarot/draw/three-card', methods=['POST'])
+def draw_three_card_spread():
+    """
+    Draws a three-card tarot spread (past, present, future).
+    """
+    try:
+        # Get a shuffled deck and draw three cards
+        deck = shuffle_deck()
+        drawn_cards = draw_cards(num_cards=3, deck=deck)
+        
+        # Get meanings for each card
+        cards_with_meaning = []
+        for i, card in enumerate(drawn_cards):
+            meaning = get_card_meaning(card)
+            cards_with_meaning.append({
+                "position": ["past", "present", "future"][i],
+                "card": card,
+                "meaning": meaning
+            })
+        
+        return jsonify({
+            "spread": cards_with_meaning
+        })
+    except Exception as e:
+        return jsonify({"error": f"Failed to draw spread: {str(e)}"}), 500
+
 @app.route('/horoscope/weekly/<sign>')
 def get_weekly_horoscope(sign):
     sign = sign.lower()

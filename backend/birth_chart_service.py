@@ -154,15 +154,18 @@ def _get_planet_sign_and_degree(body_name: str, dt: datetime) -> Dict[str, float
 
 
 def get_sun_sign(birth_date: datetime) -> str:
-    """
+    \"\"\"
     Calculate the sun sign (zodiac sign) based on birth date using actual astronomical position.
-    
+
     Args:
         birth_date: datetime object representing the birth date
-        
+
     Returns:
         str: the zodiac sign in lowercase
-    """
+    \"\"\"
+    # If time is midnight (00:00:00), use noon for better accuracy when time is unknown
+    if birth_date.hour == 0 and birth_date.minute == 0 and birth_date.second == 0:
+        birth_date = birth_date.replace(hour=12, minute=0, second=0)
     result = _get_planet_sign_and_degree('sun', birth_date)
     return result['sign']
 
