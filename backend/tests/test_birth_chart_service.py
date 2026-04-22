@@ -1,8 +1,10 @@
 import pytest
+import sys
+import os
 from datetime import datetime
-# We will import the service once we create it
-# For now, we expect it to be in backend.birth_chart_service
-# We'll write tests for the sun sign calculation
+
+# Add the backend directory to the path so we can import birth_chart_service
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 def test_sun_sign_calculation():
     """Test that the sun sign is correctly calculated from a birth date."""
